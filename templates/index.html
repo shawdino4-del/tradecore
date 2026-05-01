@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Pro Trading Command Center</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        *{box-sizing:border-box}
+        body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,#0f172a,#020617 60%);color:#e2e8f0}
+        .header{padding:18px;background:linear-gradient(90deg,#020617,#0f172a,#020617);text-align:center;font-size:24px;font-weight:bold;color:#38bdf8;border-bottom:1px solid #1e293b;letter-spacing:.5px}
+        .subheader{text-align:center;padding:8px;color:#94a3b8;font-size:13px;background:#020617;border-bottom:1px solid #1e293b}
+        .container{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1600px;margin:auto}
+        .card{background:rgba(2,6,23,.92);border:1px solid #334155;border-radius:16px;padding:16px;box-shadow:0 10px 25px rgba(0,0,0,.25)}
+        .wide{grid-column:span 2}
+        h3{margin-top:0;color:#93c5fd;border-bottom:1px solid #1e293b;padding-bottom:8px;font-size:17px}
+        .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+        .metric{background:#000;padding:14px;border-radius:12px;text-align:center;border:1px solid #1e293b;min-height:70px}
+        .metric span{display:block;color:#94a3b8;font-size:12px;margin-bottom:6px}
+        .metric b{font-size:18px;color:#f8fafc}
+        button{padding:10px 14px;margin:5px;border:none;border-radius:8px;cursor:pointer;font-weight:bold;transition:.2s}
+        button:hover{transform:scale(1.03);opacity:.9}
+        .on{background:#22c55e;color:#020617}
+        .off{background:#facc15;color:#020617}
+        .stop{background:#ef4444;color:white}
+        .blue{background:#38bdf8;color:#020617}
+        .purple{background:#a855f7;color:white}
+        input,select,textarea{padding:9px;margin:5px;border-radius:8px;border:1px solid #475569;background:#020617;color:white;width:180px}
+        textarea{width:100%;min-height:80px;resize:vertical}
+        .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:14px}
+        .success{color:#22c55e!important;font-weight:bold}
+        .danger{color:#ef4444!important;font-weight:bold}
+        .warn{color:#facc15!important;font-weight:bold}
+        table{width:100%;font-size:12px;border-collapse:collapse;margin-top:10px}
+        th{background:#0f172a;color:#93c5fd}
+        th,td{border-bottom:1px solid #1e293b;padding:8px;text-align:center}
+        tr:hover{background:#0f172a}
+        #logs{height:220px;overflow-y:scroll;background:#000;padding:12px;border-radius:10px;font-size:12px;border:1px solid #1e293b}
+        .status-box{background:#000;padding:12px;border-radius:10px;line-height:1.7;border:1px solid #1e293b;font-size:13px}
+        .section-actions{margin-top:10px}
+        .mode-demo{color:#22c55e!important}
+        .mode-real{color:#ef4444!important;animation:pulse 1.4s infinite}
+        @keyframes pulse{0%{opacity:1}50%{opacity:.55}100%{opacity:1}}
+        .small-note{color:#94a3b8;font-size:12px;margin-top:8px}
+        .trade-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .best-signal-box{background:#000;border:1px solid #1e293b;border-radius:12px;padding:14px;margin-bottom:12px;line-height:1.7}
+        .big-signal{font-size:22px;font-weight:bold}
+        .trade-buttons button{width:46%;font-size:15px}
+        .scanner-small{max-height:360px;overflow-y:auto}
+        .sub-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .copy-box{font-size:11px;max-width:220px;word-break:break-all;color:#38bdf8}
+
+        .digit-pro-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        .digit-board{display:grid;grid-template-columns:repeat(10,1fr);gap:8px;margin-top:12px}
+        .digit-card{background:#000;border:1px solid #1e293b;border-radius:12px;padding:12px;text-align:center;position:relative;min-height:95px}
+        .digit-number{font-size:28px;font-weight:bold;color:#f8fafc}
+        .digit-percent{font-size:12px;color:#94a3b8;margin-top:4px}
+        .digit-count{font-size:11px;color:#64748b;margin-top:3px}
+        .digit-active{border:2px solid #22c55e;box-shadow:0 0 18px rgba(34,197,94,.45);animation:digitPulse .7s infinite}
+        .digit-high{border-color:#38bdf8}
+        .digit-low{border-color:#ef4444}
+        @keyframes digitPulse{0%{transform:scale(1)}50%{transform:scale(1.07)}100%{transform:scale(1)}}
+        .digit-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+        .digit-action-box{background:#000;border:1px solid #1e293b;border-radius:12px;padding:12px}
+        .digit-buttons{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+        .digit-buttons button{width:100%;margin:0;padding:9px;font-size:12px}
+        .digit-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+        .digit-mini{background:#000;border:1px solid #1e293b;border-radius:12px;padding:12px;text-align:center}
+        .digit-mini span{display:block;color:#94a3b8;font-size:12px;margin-bottom:5px}
+        .digit-mini b{font-size:18px;color:#f8fafc}
+
+        @media(max-width:900px){
+            .container{grid-template-columns:1fr;padding:12px}
+            .wide{grid-column:span 1}
+            .metrics{grid-template-columns:1fr}
+            .row{flex-direction:column;align-items:flex-start}
+            input,select{width:100%}
+            .trade-grid,.sub-grid,.digit-pro-grid,.digit-controls{grid-template-columns:1fr}
+            .trade-buttons button{width:100%}
+            .digit-board{grid-template-columns:repeat(5,1fr)}
+            .digit-summary{grid-template-columns:1fr 1fr}
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">🔥 AI Pro Trading Command Center</div>
+<div class="subheader">Digits • Digit Pro • Telegram VIP Subscriber Manager • Demo / Real Safety</div>
+
+<div class="container">
+
+    <div class="card wide">
+        <h3>Security / Account</h3>
+
+        <div class="metrics">
+            <div class="metric"><span>Account Mode</span><b id="accountMode">---</b></div>
+            <div class="metric"><span>Login ID</span><b id="loginId">---</b></div>
+            <div class="metric"><span>Balance</span><b id="accountBalance">---</b></div>
+        </div>
+
+        <div class="section-actions">
+            <button class="on" onclick="switchAccount('DEMO')">USE DEMO</button>
+            <button class="stop" onclick="switchAccount('REAL')">USE REAL</button>
+            <button class="stop" onclick="logout()">LOGOUT</button>
+        </div>
+
+        <div class="small-note">Auto mode turns OFF automatically when switching accounts.</div>
+    </div>
+
+    <div class="card wide">
+        <h3>Market Overview</h3>
+        <div class="metrics">
+            <div class="metric"><span>Selected Symbol</span><b id="mSymbol">---</b></div>
+            <div class="metric"><span>Live Price</span><b id="mPrice">---</b></div>
+            <div class="metric"><span>Status</span><b id="mStatus">---</b></div>
+        </div>
+    </div>
+
+    <div class="card wide">
+        <h3>Live Price Chart</h3>
+        <canvas id="priceChart"></canvas>
+    </div>
+
+    <div class="card wide">
+        <h3>🔢 Digit Pro Strategy</h3>
+
+        <div class="digit-pro-grid">
+            <div>
+                <h3>Live Digit Prediction Board</h3>
+
+                <div class="best-signal-box">
+                    <div>Symbol: <b id="dpSymbol">---</b></div>
+                    <div>Last Price: <b id="dpLastPrice">---</b></div>
+                    <div>Current Digit: <b id="dpLastDigit" class="big-signal">---</b></div>
+                    <div>Sample Size: <b id="dpSampleSize">---</b></div>
+                    <div>Selected Ticks: <b id="dpSelectedTicks">1</b></div>
+                </div>
+
+                <div class="digit-summary">
+                    <div class="digit-mini"><span>Highest Digit</span><b id="dpHighestDigit">---</b></div>
+                    <div class="digit-mini"><span>Highest Count</span><b id="dpHighestCount">---</b></div>
+                    <div class="digit-mini"><span>Lowest Digit</span><b id="dpLowestDigit">---</b></div>
+                    <div class="digit-mini"><span>Lowest Count</span><b id="dpLowestCount">---</b></div>
+                </div>
+
+                <div id="digitBoard" class="digit-board"></div>
+            </div>
+
+            <div>
+                <h3>Digit Pro Controls</h3>
+
+                <div class="best-signal-box">
+                    <div>Best OVER: Digit <b id="dpBestOverDigit">---</b> | Score <b id="dpBestOverScore">---</b></div>
+                    <div>Best UNDER: Digit <b id="dpBestUnderDigit">---</b> | Score <b id="dpBestUnderScore">---</b></div>
+                    <div>Rule: OVER wins above barrier. UNDER wins below barrier.</div>
+                </div>
+
+                <div class="row">
+                    <label>Ticks</label>
+                    <select id="digitProTicks" onchange="setDigitProTicks()">
+                        <option value="1">1 Tick</option>
+                        <option value="2">2 Ticks</option>
+                        <option value="3">3 Ticks</option>
+                        <option value="4">4 Ticks</option>
+                        <option value="5">5 Ticks</option>
+                        <option value="6">6 Ticks</option>
+                        <option value="7">7 Ticks</option>
+                        <option value="8">8 Ticks</option>
+                        <option value="9">9 Ticks</option>
+                        <option value="10">10 Ticks</option>
+                    </select>
+                </div>
+
+                <button class="purple" onclick="useDigitPro()">USE DIGIT PRO</button>
+                <button class="blue" onclick="setDigitProTicks()">SAVE DIGIT PRO TICKS</button>
+
+                <div class="digit-controls">
+                    <div class="digit-action-box">
+                        <h3>Instant OVER Trade</h3>
+                        <div class="small-note">Example: OVER 1 wins if final digit is 2–9.</div>
+                        <div id="overButtons" class="digit-buttons"></div>
+                    </div>
+
+                    <div class="digit-action-box">
+                        <h3>Instant UNDER Trade</h3>
+                        <div class="small-note">Example: UNDER 9 wins if final digit is 0–8.</div>
+                        <div id="underButtons" class="digit-buttons"></div>
+                    </div>
+                </div>
+
+                <div id="digitProResult" class="status-box" style="margin-top:12px;">
+                    Waiting for Digit Pro action...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card wide">
+        <h3>Fast Trading Zone</h3>
+
+        <div class="trade-grid">
+            <div>
+                <h3>Digit Scanner</h3>
+
+                <div class="best-signal-box">
+                    <div>Best Symbol: <b id="bestSymbol">---</b></div>
+                    <div>Signal: <span id="bestSignal" class="big-signal">---</span></div>
+                    <div>Barrier: <b id="bestBarrier">---</b></div>
+                    <div>Score: <b id="bestScore">---</b></div>
+                    <div>Reason: <span id="bestReason">Waiting...</span></div>
+                    <div>Entry Quality: <b id="entryQuality">---</b></div>
+                </div>
+
+                <div class="scanner-small">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Symbol</th>
+                                <th>Signal</th>
+                                <th>Barrier</th>
+                                <th>Score</th>
+                                <th>Entry</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scannerTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <h3>Manual Digits / Auto</h3>
+
+                <div class="best-signal-box">
+                    <div>Selected Symbol: <b id="selectedTradeSymbol">---</b></div>
+                    <div>Account: <b id="selectedAccount">---</b></div>
+                    <div>Trade Stake: <b id="tradeStake">---</b></div>
+                    <div>Safety: <b>Manual confirmation ON</b></div>
+                </div>
+
+                <div class="trade-buttons">
+                    <button class="blue" onclick="manualDigitOver()">DIGIT OVER 0</button>
+                    <button class="blue" onclick="manualDigitUnder()">DIGIT UNDER 9</button>
+                </div>
+
+                <div id="manualResult" class="small-note"></div>
+
+                <hr style="border:1px solid #1e293b;margin:16px 0;">
+
+                <h3>Digit Auto Controls</h3>
+
+                <button class="on" onclick="autoOn()">AUTO ON</button>
+                <button class="off" onclick="autoOff()">AUTO OFF</button>
+                <button class="stop" onclick="resetSession()">RESET / UNLOCK SESSION</button>
+
+                <div id="autoStatus" class="status-box"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h3>Main Settings</h3>
+
+        <div class="row">
+            <label>Symbol</label>
+            <select id="symbol">
+                <option value="R_10">VIX 10</option>
+                <option value="R_25">VIX 25</option>
+                <option value="R_50">VIX 50</option>
+                <option value="R_75">VIX 75</option>
+                <option value="R_100">VIX 100</option>
+                <option value="1HZ10V">VIX 10 1s</option>
+                <option value="1HZ25V">VIX 25 1s</option>
+                <option value="1HZ50V">VIX 50 1s</option>
+                <option value="1HZ75V">VIX 75 1s</option>
+                <option value="1HZ100V">VIX 100 1s</option>
+                <option value="JD10">Jump 10</option>
+                <option value="JD25">Jump 25</option>
+                <option value="JD50">Jump 50</option>
+                <option value="JD75">Jump 75</option>
+                <option value="JD100">Jump 100</option>
+                <option value="BOOM300">Boom 300</option>
+                <option value="BOOM500">Boom 500</option>
+                <option value="BOOM1000">Boom 1000</option>
+                <option value="CRASH300">Crash 300</option>
+                <option value="CRASH500">Crash 500</option>
+                <option value="CRASH1000">Crash 1000</option>
+            </select>
+        </div>
+
+        <div class="row">
+            <label>Strategy</label>
+            <select id="strategyMode">
+                <option value="digits">Digits</option>
+                <option value="digit_pro">Digit Pro</option>
+            </select>
+        </div>
+
+        <button class="purple" onclick="useDigits()">USE DIGITS AUTO</button>
+        <button class="purple" onclick="useDigitPro()">USE DIGIT PRO</button>
+
+        <div class="row">
+            <label>Stake</label>
+            <input id="stake" type="number" value="1" step="0.01">
+        </div>
+
+        <div class="row">
+            <label>Learning</label>
+            <select id="learningMode">
+                <option value="true">ON</option>
+                <option value="false">OFF</option>
+            </select>
+        </div>
+
+        <button class="blue" onclick="saveSettings()">SAVE MAIN SETTINGS</button>
+    </div>
+
+    <div class="card">
+        <h3>Risk Settings</h3>
+
+        <div class="row"><label>Max Trades</label><input id="maxTrades" type="number" value="5"></div>
+        <div class="row"><label>Profit Target</label><input id="profitTarget" type="number" value="3" step="0.01"></div>
+        <div class="row"><label>Daily Loss Limit</label><input id="dailyLossLimit" type="number" value="2" step="0.01"></div>
+        <div class="row"><label>Cooldown Seconds</label><input id="cooldown" type="number" value="60"></div>
+        <div class="row"><label>Required Score</label><input id="requiredScore" type="number" value="90"></div>
+
+        <button class="blue" onclick="saveSettings()">SAVE RISK SETTINGS</button>
+    </div>
+
+    <div class="card">
+        <h3>Profit Protection</h3>
+
+        <div class="row">
+            <label>Protection</label>
+            <select id="profitProtection">
+                <option value="true">ON</option>
+                <option value="false">OFF</option>
+            </select>
+        </div>
+
+        <div class="row"><label>Protect At Profit</label><input id="protectAtProfit" type="number" value="1.5" step="0.01"></div>
+        <div class="row"><label>Max Giveback</label><input id="maxGiveback" type="number" value="0.75" step="0.01"></div>
+
+        <button class="blue" onclick="saveSettings()">SAVE PROTECTION</button>
+        <div class="small-note">Protection locks the session if profit drops too far from peak.</div>
+    </div>
+
+    <div class="card">
+        <h3>AI Learning Mode</h3>
+
+        <div class="metrics">
+            <div class="metric"><span>Learning</span><b id="lMode">---</b></div>
+            <div class="metric"><span>Required Score</span><b id="lScore">---</b></div>
+            <div class="metric"><span>Current Strategy</span><b id="lStrategy">---</b></div>
+        </div>
+
+        <div id="learningStats" class="status-box" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="card wide">
+        <h3>Subscriber Manager — Dino Pro Signals Vault</h3>
+
+        <div class="sub-grid">
+            <div>
+                <h3>Add Subscriber</h3>
+
+                <div class="row"><label>Name</label><input id="subName" placeholder="Customer name"></div>
+                <div class="row"><label>Telegram Username</label><input id="subTelegramUsername" placeholder="@username"></div>
+                <div class="row"><label>Telegram User ID</label><input id="subTelegramUserId" placeholder="Required for remove"></div>
+                <div class="row"><label>Plan</label><input id="subPlan" value="Monthly"></div>
+                <div class="row"><label>Days</label><input id="subDays" type="number" value="30"></div>
+                <div class="row"><label>Notes</label><input id="subNotes" placeholder="Payment note / receipt"></div>
+
+                <button class="on" onclick="addSubscriber()">ADD SUBSCRIBER</button>
+                <button class="blue" onclick="loadSubscribers()">REFRESH</button>
+                <button class="stop" onclick="checkExpiredSubscribers()">CHECK EXPIRED / REMOVE VIP</button>
+
+                <div class="small-note">
+                    Subscriber keeps access to Updates group. Expired users lose VIP bot access only.
+                </div>
+            </div>
+
+            <div>
+                <h3>Telegram Updates Group</h3>
+
+                <textarea id="updateMessage" placeholder="Write update message for Dino Pro Signals Vault Updates..."></textarea>
+
+                <button class="purple" onclick="sendUpdateMessage()">SEND UPDATE MESSAGE</button>
+
+                <div id="telegramStatus" class="status-box" style="margin-top:12px;">
+                    Telegram status loading...
+                </div>
+            </div>
+        </div>
+
+        <h3 style="margin-top:18px;">Subscribers</h3>
+
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Telegram</th>
+                        <th>User ID</th>
+                        <th>Plan</th>
+                        <th>Expiry</th>
+                        <th>Status</th>
+                        <th>Bot Access</th>
+                        <th>Invite</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="subscribersTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card wide">
+        <h3>Performance</h3>
+
+        <div class="metrics">
+            <div class="metric"><span>Win Rate</span><b id="pWinRate">---</b></div>
+            <div class="metric"><span>Profit</span><b id="pProfit">---</b></div>
+            <div class="metric"><span>Average Profit</span><b id="pAvg">---</b></div>
+        </div>
+
+        <div class="section-actions">
+            <button class="off" onclick="downloadReport()">Download Trade Report</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Account</th>
+                    <th>Stake</th>
+                    <th>Symbol</th>
+                    <th>Type</th>
+                    <th>Barrier</th>
+                    <th>Duration</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                    <th>Profit</th>
+                </tr>
+            </thead>
+            <tbody id="tradeHistory"></tbody>
+        </table>
+    </div>
+
+    <div class="card wide">
+        <h3>Backup / Export</h3>
+
+        <button class="off" onclick="downloadSettings()">DOWNLOAD SETTINGS</button>
+        <button class="off" onclick="downloadBackup()">DOWNLOAD FULL BACKUP</button>
+        <button class="off" onclick="downloadReport()">DOWNLOAD TRADE REPORT</button>
+    </div>
+
+    <div class="card wide">
+        <h3>Live Logs</h3>
+        <div id="logs"></div>
+    </div>
+
+</div>
+
+<script>
+let chart;
+let settingsLoaded = false;
+
+function initChart(){
+    const ctx=document.getElementById('priceChart').getContext('2d');
+
+    chart=new Chart(ctx,{
+        type:'line',
+        data:{
+            labels:[],
+            datasets:[{
+                data:[],
+                borderColor:'lime',
+                borderWidth:2,
+                pointRadius:0,
+                tension:0.25
+            }]
+        },
+        options:{
+            responsive:true,
+            animation:false,
+            plugins:{legend:{display:false}},
+            scales:{
+                x:{display:false},
+                y:{ticks:{color:'#94a3b8'},grid:{color:'#1e293b'}}
+            }
+        }
+    });
+}
+
+function buildDigitProButtons(){
+    let overHtml = "";
+    let underHtml = "";
+
+    for(let i=0;i<=9;i++){
+        overHtml += `<button class="on" onclick="placeDigitOver(${i})">OVER ${i}</button>`;
+        underHtml += `<button class="off" onclick="placeDigitUnder(${i})">UNDER ${i}</button>`;
+    }
+
+    overButtons.innerHTML = overHtml;
+    underButtons.innerHTML = underHtml;
+}
+
+function useDigits(){
+    strategyMode.value = "digits";
+    requiredScore.value = 90;
+    cooldown.value = 60;
+    maxTrades.value = 5;
+    profitTarget.value = 3;
+    dailyLossLimit.value = 2;
+    protectAtProfit.value = 1.5;
+    maxGiveback.value = 0.75;
+    learningMode.value = "true";
+    saveSettings();
+    alert("Digits mode activated.");
+}
+
+function useDigitPro(){
+    strategyMode.value = "digit_pro";
+    requiredScore.value = 90;
+    cooldown.value = 60;
+    maxTrades.value = 5;
+    profitTarget.value = 3;
+    dailyLossLimit.value = 2;
+    protectAtProfit.value = 1.5;
+    maxGiveback.value = 0.75;
+    learningMode.value = "true";
+    setDigitProTicks();
+    saveSettings();
+    alert("Digit Pro activated.");
+}
+
+function setDigitProTicks(){
+    fetch('/set_digit_pro',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+            ticks:parseInt(digitProTicks.value)
+        })
+    })
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.ok){
+            dpSelectedTicks.innerHTML = d.digit_pro_ticks;
+        }
+    });
+}
+
+function placeDigitOver(digit){
+    let ticks = parseInt(digitProTicks.value);
+    digitProResult.innerHTML = "Placing OVER "+digit+" for "+ticks+" tick(s)...";
+
+    fetch('/digit_over/'+digit,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ticks:ticks})
+    })
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.success){
+            digitProResult.innerHTML = "DIGIT PRO OVER "+digit+" EXECUTED | Contract ID: "+d.contract_id;
+        }else{
+            digitProResult.innerHTML = "ERROR: "+JSON.stringify(d.error);
+        }
+    });
+}
+
+function placeDigitUnder(digit){
+    let ticks = parseInt(digitProTicks.value);
+    digitProResult.innerHTML = "Placing UNDER "+digit+" for "+ticks+" tick(s)...";
+
+    fetch('/digit_under/'+digit,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ticks:ticks})
+    })
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.success){
+            digitProResult.innerHTML = "DIGIT PRO UNDER "+digit+" EXECUTED | Contract ID: "+d.contract_id;
+        }else{
+            digitProResult.innerHTML = "ERROR: "+JSON.stringify(d.error);
+        }
+    });
+}
+
+function updateDigitPro(){
+    fetch('/digit_pro_data')
+    .then(r=>r.json())
+    .then(d=>{
+        dpSymbol.innerHTML = d.symbol;
+        dpLastPrice.innerHTML = d.last_price;
+        dpLastDigit.innerHTML = d.last_digit === null ? "---" : d.last_digit;
+        dpSampleSize.innerHTML = d.sample_size;
+        dpSelectedTicks.innerHTML = d.ticks;
+
+        dpHighestDigit.innerHTML = d.highest_digit;
+        dpHighestCount.innerHTML = d.highest_count;
+        dpLowestDigit.innerHTML = d.lowest_digit;
+        dpLowestCount.innerHTML = d.lowest_count;
+
+        dpBestOverDigit.innerHTML = d.best_over_digit;
+        dpBestOverScore.innerHTML = d.best_over_score + "%";
+        dpBestUnderDigit.innerHTML = d.best_under_digit;
+        dpBestUnderScore.innerHTML = d.best_under_score + "%";
+
+        let html = "";
+
+        for(let i=0;i<=9;i++){
+            let cls = "digit-card";
+
+            if(d.last_digit === i){
+                cls += " digit-active";
+            }
+
+            if(String(i) === String(d.highest_digit)){
+                cls += " digit-high";
+            }
+
+            if(String(i) === String(d.lowest_digit)){
+                cls += " digit-low";
+            }
+
+            html += `
+            <div class="${cls}">
+                <div class="digit-number">${i}</div>
+                <div class="digit-percent">${d.percentages[String(i)]}%</div>
+                <div class="digit-count">Count: ${d.counts[String(i)]}</div>
+            </div>`;
+        }
+
+        digitBoard.innerHTML = html;
+    });
+}
+
+function switchAccount(mode){
+    if(mode === "REAL"){
+        let confirmReal = confirm("WARNING: You are switching to REAL account. Real money can be traded. Continue?");
+        if(!confirmReal) return;
+
+        let confirmAgain = confirm("Final warning: REAL account selected. Auto mode will be turned OFF. Continue?");
+        if(!confirmAgain) return;
+    }
+
+    fetch('/switch_account',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({mode:mode})
+    })
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.ok){
+            alert("Switched to " + d.mode + ". Auto mode is OFF for safety.");
+            settingsLoaded = false;
+            updateAccountInfo();
+            updateStatus();
+        }else{
+            alert("Switch failed: " + d.error);
+        }
+    });
+}
+
+function updateAccountInfo(){
+    fetch('/account_info')
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.error){
+            accountMode.innerHTML = d.mode || "ERROR";
+            accountMode.className = "warn";
+            loginId.innerHTML = "---";
+            accountBalance.innerHTML = d.error;
+            selectedAccount.innerHTML = d.mode || "---";
+            return;
+        }
+
+        accountMode.innerHTML = d.mode;
+        accountMode.className = d.mode === "REAL" ? "mode-real" : "mode-demo";
+        loginId.innerHTML = d.loginid;
+        accountBalance.innerHTML = d.balance + " " + d.currency;
+        selectedAccount.innerHTML = d.mode;
+        selectedAccount.className = d.mode === "REAL" ? "mode-real" : "mode-demo";
+    });
+}
+
+function logout(){
+    window.location.href = "/logout";
+}
+
+function updateChart(){
+    fetch('/chart_data').then(r=>r.json()).then(d=>{
+        chart.data.labels=d.prices.map((_,i)=>i);
+        chart.data.datasets[0].data=d.prices;
+        chart.update();
+    });
+}
+
+function updateMarket(){
+    fetch('/market').then(r=>r.json()).then(d=>{
+        mSymbol.innerHTML=d.symbol;
+        selectedTradeSymbol.innerHTML=d.symbol;
+        mPrice.innerHTML=d.price;
+        mStatus.innerHTML=d.status;
+
+        if(d.status === "Connected"){
+            mStatus.className = "success";
+        }else{
+            mStatus.className = "danger";
+        }
+    });
+}
+
+function saveSettings(){
+    fetch('/set_auto',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+            symbol:symbol.value,
+            strategy_mode:strategyMode.value,
+            stake:parseFloat(stake.value),
+            learning_mode:learningMode.value === "true",
+
+            max_trades:parseInt(maxTrades.value),
+            profit_target:parseFloat(profitTarget.value),
+            daily_loss_limit:parseFloat(dailyLossLimit.value),
+            cooldown_seconds:parseInt(cooldown.value),
+            base_required_score:parseInt(requiredScore.value),
+
+            profit_protection:profitProtection.value === "true",
+            protect_at_profit:parseFloat(protectAtProfit.value),
+            max_giveback:parseFloat(maxGiveback.value),
+
+            digit_pro_ticks:parseInt(digitProTicks.value)
+        })
+    }).then(()=>{
+        settingsLoaded = false;
+        updateStatus();
+    });
+}
+
+function autoOn(){
+    fetch('/auto_on',{method:'POST'})
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.ok === false){
+            alert("Auto blocked: " + d.error);
+        }
+    });
+}
+
+function autoOff(){
+    fetch('/auto_off',{method:'POST'});
+}
+
+function resetSession(){
+    if(!confirm("Reset and unlock session?")) return;
+    fetch('/reset_session',{method:'POST'}).then(()=>{
+        settingsLoaded = false;
+        updateStatus();
+    });
+}
+
+function manualDigitOver(){
+    if(!confirm("Manual DIGIT OVER 0 demo/real trade?")) return;
+    fetch('/manual_digit_over',{method:'POST'}).then(r=>r.json()).then(d=>{
+        manualResult.innerHTML=d.success?"DIGIT OVER EXECUTED":"ERROR: "+JSON.stringify(d.error);
+    });
+}
+
+function manualDigitUnder(){
+    if(!confirm("Manual DIGIT UNDER 9 demo/real trade?")) return;
+    fetch('/manual_digit_under',{method:'POST'}).then(r=>r.json()).then(d=>{
+        manualResult.innerHTML=d.success?"DIGIT UNDER EXECUTED":"ERROR: "+JSON.stringify(d.error);
+    });
+}
+
+function updateStatus(){
+    fetch('/auto_status').then(r=>r.json()).then(d=>{
+        tradeStake.innerHTML = d.trade_stake;
+
+        autoStatus.innerHTML=
+            "Account: <b>"+d.active_account+"</b><br>"+
+            "Auto Mode: <b class='"+(d.auto_settings.auto_mode?"success":"warn")+"'>"+(d.auto_settings.auto_mode?"ON":"OFF")+"</b><br>"+
+            "Strategy: "+d.auto_settings.strategy_mode+"<br>"+
+            "Stake: "+d.trade_stake+"<br>"+
+            "Digit Pro Ticks: "+d.auto_settings.digit_pro_ticks+"<br>"+
+            "Trades: "+d.session.trades+" / "+d.auto_settings.max_trades+"<br>"+
+            "Profit: "+d.session.profit+" / Target "+d.auto_settings.profit_target+"<br>"+
+            "Peak Profit: "+d.session.peak_profit+"<br>"+
+            "Profit Protected: "+(d.session.profit_protected ? "YES" : "NO")+"<br>"+
+            "Protection At: "+d.auto_settings.protect_at_profit+"<br>"+
+            "Max Giveback: "+d.auto_settings.max_giveback+"<br>"+
+            "Daily Loss Limit: "+d.auto_settings.daily_loss_limit+"<br>"+
+            "Win Rate: "+d.win_rate+"%<br>"+
+            "Required Score: "+d.required_score+"<br>"+
+            "Locked: <b class='"+(d.session.session_locked?"danger":"success")+"'>"+(d.session.session_locked ? "YES" : "NO")+"</b><br>"+
+            "Lock Reason: "+(d.session.lock_reason || "None")+"<br>"+
+            "Last Symbol: "+d.session.last_symbol+"<br>"+
+            "Last Signal: "+d.session.last_signal+"<br>"+
+            "Last Score: "+d.session.last_score;
+
+        if(!settingsLoaded){
+            symbol.value = d.auto_settings.symbol;
+            strategyMode.value = d.auto_settings.strategy_mode;
+            stake.value = d.auto_settings.stake;
+            learningMode.value = String(d.auto_settings.learning_mode);
+
+            maxTrades.value = d.auto_settings.max_trades;
+            profitTarget.value = d.auto_settings.profit_target;
+            dailyLossLimit.value = d.auto_settings.daily_loss_limit;
+            cooldown.value = d.auto_settings.cooldown_seconds;
+            requiredScore.value = d.auto_settings.base_required_score;
+
+            profitProtection.value = String(d.auto_settings.profit_protection);
+            protectAtProfit.value = d.auto_settings.protect_at_profit;
+            maxGiveback.value = d.auto_settings.max_giveback;
+
+            digitProTicks.value = d.auto_settings.digit_pro_ticks || 1;
+            dpSelectedTicks.innerHTML = d.auto_settings.digit_pro_ticks || 1;
+
+            settingsLoaded = true;
+        }
+    });
+}
+
+function updateLearning(){
+    fetch('/learning').then(r=>r.json()).then(d=>{
+        lMode.innerHTML=d.learning_mode?"ON":"OFF";
+        lMode.className=d.learning_mode?"success":"warn";
+        lScore.innerHTML=d.required_score;
+        lStrategy.innerHTML=strategyMode.value;
+
+        let html="";
+        Object.keys(d.stats).forEach(k=>{
+            let s=d.stats[k];
+            html+=k+" | Wins: "+s.wins+" | Losses: "+s.losses+" | Adjust: "+s.score_adjust+"<br>";
+        });
+        learningStats.innerHTML=html;
+    });
+}
+
+function updatePerformance(){
+    fetch('/performance').then(r=>r.json()).then(d=>{
+        pWinRate.innerHTML=d.win_rate+"%";
+        pProfit.innerHTML=d.total_profit;
+        pAvg.innerHTML=d.avg_profit;
+
+        pProfit.className = d.total_profit >= 0 ? "success" : "danger";
+
+        let html="";
+        d.trade_history.forEach((t,i)=>{
+            let cls=t.profit>=0?"success":"danger";
+
+            html+=`
+            <tr>
+                <td>${i+1}</td>
+                <td>${t.account_mode || ""}</td>
+                <td>${t.stake || ""}</td>
+                <td>${t.symbol}</td>
+                <td>${t.type}</td>
+                <td>${t.barrier || ""}</td>
+                <td>${t.duration_ticks || ""}</td>
+                <td>${t.score}</td>
+                <td>${t.status}</td>
+                <td class="${cls}">${t.profit}</td>
+            </tr>`;
+        });
+
+        tradeHistory.innerHTML=html;
+    });
+}
+
+function updateScanner(){
+    fetch('/scanner').then(r=>r.json()).then(d=>{
+        let html="";
+
+        if(d.best){
+            bestSymbol.innerHTML = d.best.symbol;
+            bestSignal.innerHTML = d.best.signal;
+            bestBarrier.innerHTML = d.best.barrier;
+            bestScore.innerHTML = d.best.score + "%";
+            bestReason.innerHTML = d.best.reason;
+            entryQuality.innerHTML = d.best.entry_quality || "---";
+
+            if(d.best.entry_quality === "READY"){
+                entryQuality.className = "success";
+            }else{
+                entryQuality.className = "warn";
+            }
+
+            if(d.best.signal === "NO"){
+                bestSignal.className = "big-signal warn";
+            }else if(d.best.signal.includes("UNDER")){
+                bestSignal.className = "big-signal danger";
+            }else{
+                bestSignal.className = "big-signal success";
+            }
+        }
+
+        d.signals.forEach(s=>{
+            let rowClass=d.best && s.symbol===d.best.symbol?"success":"";
+            let signalClass=s.signal==="NO"?"warn":(s.signal.includes("UNDER")?"danger":"success");
+            let entryClass=s.entry_quality==="READY"?"success":"warn";
+
+            html+=`
+            <tr>
+                <td class="${rowClass}">${s.symbol}</td>
+                <td class="${signalClass}">${s.signal}</td>
+                <td>${s.barrier}</td>
+                <td>${s.score}%</td>
+                <td class="${entryClass}">${s.entry_quality || "WAIT"}</td>
+            </tr>`;
+        });
+
+        scannerTable.innerHTML=html;
+    });
+}
+
+function loadSubscribers(){
+    fetch('/subscribers')
+    .then(r=>r.json())
+    .then(d=>{
+        telegramStatus.innerHTML =
+            "Telegram Ready: <b class='"+(d.telegram_ready ? "success" : "warn")+"'>"+(d.telegram_ready ? "YES" : "NO")+"</b><br>"+
+            "VIP Group ID: "+(d.vip_group_id || "Not set")+"<br>"+
+            "Updates Group ID: "+(d.updates_group_id || "Not set");
+
+        let html = "";
+
+        d.subscribers.forEach(s=>{
+            let statusClass = s.status === "ACTIVE" ? "success" : "danger";
+            let accessClass = s.bot_access ? "success" : "danger";
+            let invite = s.invite_link ? `<div class="copy-box">${s.invite_link}</div>` : "---";
+
+            html += `
+            <tr>
+                <td>${s.name}</td>
+                <td>${s.telegram_username || ""}</td>
+                <td>${s.telegram_user_id || ""}</td>
+                <td>${s.plan || ""}</td>
+                <td>${s.expiry_date || ""}</td>
+                <td class="${statusClass}">${s.status}</td>
+                <td class="${accessClass}">${s.bot_access ? "YES" : "NO"}</td>
+                <td>${invite}</td>
+                <td>
+                    <button class="blue" onclick="createInvite('${s.id}')">INVITE</button>
+                    <button class="on" onclick="extendSubscriber('${s.id}')">+30 DAYS</button>
+                    <button class="stop" onclick="removeVip('${s.id}')">REMOVE VIP</button>
+                    <button class="stop" onclick="deleteSubscriber('${s.id}')">DELETE</button>
+                </td>
+            </tr>`;
+        });
+
+        subscribersTable.innerHTML = html;
+    });
+}
+
+function addSubscriber(){
+    fetch('/subscriber_add',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+            name:subName.value,
+            telegram_username:subTelegramUsername.value,
+            telegram_user_id:subTelegramUserId.value,
+            plan:subPlan.value,
+            days:parseInt(subDays.value),
+            notes:subNotes.value
+        })
+    })
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.ok){
+            alert("Subscriber added.");
+            subName.value="";
+            subTelegramUsername.value="";
+            subTelegramUserId.value="";
+            subNotes.value="";
+            loadSubscribers();
+        }else{
+            alert("Error: "+d.error);
+        }
+    });
+}
+
+function extendSubscriber(id){
+    fetch('/subscriber_extend/'+id,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({days:30})
+    })
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.ok){
+            alert("Subscriber extended 30 days.");
+            loadSubscribers();
+        }else{
+            alert("Error: "+d.error);
+        }
+    });
+}
+
+function createInvite(id){
+    fetch('/subscriber_invite/'+id,{method:'POST'})
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.ok){
+            alert("VIP invite created.");
+            loadSubscribers();
+        }else{
+            alert("Invite error: "+d.error);
+        }
+    });
+}
+
+function removeVip(id){
+    if(!confirm("Remove this subscriber from VIP group? They will still remain in Updates group.")) return;
+
+    fetch('/subscriber_remove_vip/'+id,{method:'POST'})
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.ok){
+            alert("VIP access removed.");
+            loadSubscribers();
+        }else{
+            alert("Remove error: "+d.error);
+        }
+    });
+}
+
+function deleteSubscriber(id){
+    if(!confirm("Delete this subscriber record?")) return;
+
+    fetch('/subscriber_delete/'+id,{method:'POST'})
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.ok){
+            alert("Subscriber deleted.");
+            loadSubscribers();
+        }else{
+            alert("Delete error: "+d.error);
+        }
+    });
+}
+
+function checkExpiredSubscribers(){
+    fetch('/subscriber_check_expired',{method:'POST'})
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.ok){
+            alert("Expired check complete. Removed: "+d.removed.length);
+            loadSubscribers();
+        }else{
+            alert("Error checking expired.");
+        }
+    });
+}
+
+function sendUpdateMessage(){
+    fetch('/subscriber_send_update',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({message:updateMessage.value})
+    })
+    .then(r=>r.json())
+    .then(d=>{
+        if(d.ok){
+            alert("Update sent to Telegram group.");
+            updateMessage.value="";
+        }else{
+            alert("Send error: "+d.error);
+        }
+    });
+}
+
+function updateLogs(){
+    fetch('/logs').then(r=>r.json()).then(d=>{
+        logs.innerHTML=d.logs.join("<br>");
+        logs.scrollTop = logs.scrollHeight;
+    });
+}
+
+function downloadReport(){
+    window.location="/download_report";
+}
+
+function downloadSettings(){
+    window.location="/download_settings";
+}
+
+function downloadBackup(){
+    window.location="/download_backup";
+}
+
+buildDigitProButtons();
+initChart();
+
+setInterval(()=>{
+    updateAccountInfo();
+    updateMarket();
+    updateChart();
+    updateStatus();
+    updateLearning();
+    updatePerformance();
+    updateScanner();
+    updateDigitPro();
+    updateLogs();
+},2000);
+
+setInterval(()=>{
+    loadSubscribers();
+},10000);
+
+loadSubscribers();
+updateDigitPro();
+updateScanner();
+</script>
+
+</body>
+</html>

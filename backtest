@@ -1,0 +1,185 @@
+import MetaTrader5 as mt5
+import pandas as pd
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras import layers
+
+symbol = "XAUUSD"
+
+# =====================================================
+# 📡 LOAD DATA
+# =====================================================
+def load_data():
+    mt5.initialize()
+
+    rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_M5, 0, 5000)
+    df = pd.DataFrame(rates)
+
+    df['time'] = pd.to_datetime(df['time'], unit='s')
+
+    return df
+
+
+# =====================================================
+# 🧠 CREATE DATASET
+# =====================================================
+def create_dataset(df, window=20):
+    X, y = [], []
+
+    close = df['close'].values
+
+    for i in range(window, len(close)-1):
+        seq = close[i-window:i]
+        future = close[i+1]
+
+        label = 1 if future > close[i] else 0
+
+        X.append(seq)
+        y.append(label)
+
+    return np.array(X), np.array(y)
+
+
+# =====================================================
+# 🧠 NORMALIZE
+# =====================================================
+def normalize(X):
+    return (X - np.mean(X)) / (np.std(X) + 1e-8)
+
+
+# =====================================================
+# 🧠 BUILD MODEL
+# =====================================================
+def build_model(input_shape):
+    model = tf.keras.Sequential([
+        layers.LSTM(64, return_sequences=True, input_shape=input_shape),
+        layers.LSTM(32),
+        layers.Dense(16, activation='relu'),
+        layers.Dense(1, activation='sigmoid')
+    ])
+
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    return model
+
+
+# =====================================================
+# 🚀 TRAIN MODEL
+# =====================================================
+def train_model(df):
+    X, y = create_dataset(df)
+
+    X = normalize(X)
+    X = X.reshape(X.shape[0], X.shape[1], 1)
+
+    model = build_model((X.shape[1], 1))
+
+    model.fit(
+        X, y,
+        epochs=5,
+        batch_size=64,
+        validation_split=0.2
+    )
+
+    return model
+
+
+# =====================================================
+# 🧠 ML SIGNAL
+# =====================================================
+def ml_signal(model, window_data):
+    x = np.array(window_data).reshape(1, len(window_data), 1)
+
+    prob = model.predict(x, verbose=0)[0][0]
+
+    if prob > 0.55:
+        return 1   # BUY
+    elif prob < 0.45:
+        return -1  # SELL
+    return 0
+
+
+# =====================================================
+# 📊 BACKTEST WITH ML
+# =====================================================
+def backtest(df, model):
+    balance = 1000
+    equity = 1000
+
+    position = None
+    entry = 0
+
+    wins = 0
+    losses = 0
+
+    equity_curve = []
+
+    close = df['close'].values
+
+    for i in range(len(df)):
+
+        if i < 20:
+            continue
+
+        window = close[i-20:i]
+        sig = ml_signal(model, window)
+        price = close[i]
+
+        # ============================
+        # ENTRY
+        # ============================
+        if position is None and sig != 0:
+            position = sig
+            entry = price
+
+        # ============================
+        # EXIT
+        # ============================
+        elif position is not None:
+
+            pnl = 0
+
+            if position == 1:
+                pnl = price - entry
+            elif position == -1:
+                pnl = entry - price
+
+            pnl *= 10
+
+            balance += pnl
+            equity = balance
+
+            equity_curve.append(equity)
+
+            if pnl > 0:
+                wins += 1
+            else:
+                losses += 1
+
+            position = None
+
+    # =================================================
+    # 📊 RESULTS
+    # =================================================
+    total_trades = wins + losses
+    win_rate = (wins / total_trades) * 100 if total_trades > 0 else 0
+
+    max_dd = (max(equity_curve) - min(equity_curve)) if equity_curve else 0
+
+    print("\n===== ML BACKTEST RESULTS =====")
+    print(f"Final Balance: {balance:.2f}")
+    print(f"Trades: {total_trades}")
+    print(f"Win Rate: {win_rate:.2f}%")
+    print(f"Max Drawdown: {max_dd:.2f}")
+
+
+# =====================================================
+# 🚀 RUN
+# =====================================================
+if __name__ == "__main__":
+    df = load_data()
+
+    print("Training model...")
+    model = train_model(df)
+
+    print("Running backtest...")
+    backtest(df, model)

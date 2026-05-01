@@ -1,4 +1,4 @@
-Flask
-python-dotenv
+flask
 websocket-client
+python-dotenv
 gunicorn
